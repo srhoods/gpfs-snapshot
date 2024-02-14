@@ -79,7 +79,7 @@ def return_aged_snapshots(FS, FILESET, AGE):
 	return snapshots
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser(description="Squarepoint GPFS/ESS Snapshot management tool")
+	parser = argparse.ArgumentParser(description="GPFS/ESS Snapshot management tool")
 	parser.add_argument("--fs", type=str, help="Filesystem", choices=fs, required=False)
 	parser.add_argument("--fset", type=str, help="Fileset", required=False)
 	parser.add_argument("--age", type=int, help="Age of snapshots to delete in days", required=False)

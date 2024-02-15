@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 #
 # Script to manage the creation and deletion of GPFS snapshots
+# Author: Steven Rhoods <steven@rhoods.com>
 #
 
 import subprocess
 import argparse
 from datetime import datetime
+
+VERSION="0.1.1"
 
 fs=['archive', 'archive2']
 
@@ -18,7 +21,7 @@ def timenow_seconds():
 
 def snapshot_print(FS):
 	header=['Filesystem','Fileset','Snapshot Name','Timestamp','Age (seconds)']
-	mmlssnapshot=subprocess.run(["mmlssnapshot", FS, "-Y"], stdout=subprocess.PIPE)
+	mmlssnapshot=subprocess.run(["/usr/lpp/mmfs/bin/mmlssnapshot", FS, "-Y"], stdout=subprocess.PIPE)
 	mmlssnapshot_split = mmlssnapshot.stdout.decode('utf-8').rstrip().split('\n')
 	if len(mmlssnapshot_split) > 1:
 		print('{:<12} {:<15} {:<25} {:<30} {:<15}'.format(header[0],header[1],header[2],header[3],header[4]))
@@ -37,7 +40,7 @@ def snapshot_print(FS):
 
 def snapshot_create(FS, FILESET):
 	snapshotname=FILESET + ":" + datetime.now().strftime('%Y-%m-%d_%H%M%S')
-	mmcrsnapshot=subprocess.run(["mmcrsnapshot", FS, snapshotname], stdout=subprocess.PIPE)
+	mmcrsnapshot=subprocess.run(["/usr/lpp/mmfs/bin/mmcrsnapshot", FS, snapshotname], stdout=subprocess.PIPE)
 	if mmcrsnapshot.returncode == 0:
 		print("Snapshot completed successfully: " + FS + ":" + snapshotname)
 	else:
@@ -49,7 +52,7 @@ def snapshot_delete(SNAPSHOTS):
 	if len(SNAPSHOTS) != 0:
 		for snapshot in SNAPSHOTS:
 			snapshotname=snapshot["fileset"] + ":" + snapshot["name"]
-			mmdelsnapshot=subprocess.run(["mmdelsnapshot", snapshot["fs"], snapshotname], stdout=subprocess.PIPE)
+			mmdelsnapshot=subprocess.run(["/usr/lpp/mmfs/bin/mmdelsnapshot", snapshot["fs"], snapshotname], stdout=subprocess.PIPE)
 
 			if mmdelsnapshot.returncode == 0:
 				print("Snapshot deleted successfully: " + snapshot["fs"] + ":" + snapshotname)
@@ -59,7 +62,7 @@ def snapshot_delete(SNAPSHOTS):
 
 def return_aged_snapshots(FS, FILESET, AGE):
 	snapshots = []
-	mmlssnapshot=subprocess.run(["mmlssnapshot", FS, "-j", FILESET, "-Y"], stdout=subprocess.PIPE)
+	mmlssnapshot=subprocess.run(["/usr/lpp/mmfs/bin/mmlssnapshot", FS, "-j", FILESET, "-Y"], stdout=subprocess.PIPE)
 	mmlssnapshot_split = mmlssnapshot.stdout.decode('utf-8').rstrip().split('\n')
 
 	if len(mmlssnapshot_split) > 1:
@@ -87,6 +90,7 @@ if __name__ == "__main__":
 	group.add_argument('--list', help="Lists all snapshots for a given volume", action='store_true')
 	group.add_argument('--create', help="Creates a snapshot for a given volume and fileset", action='store_true')
 	group.add_argument('--delete', help="Deletes snapshots for a given volume and fileset", action='store_true')
+	group.add_argument('--version', '-v', help="Displays version of script", action='store_true')
 	args = parser.parse_args()
 
 	if args.list == True:
@@ -110,3 +114,6 @@ if __name__ == "__main__":
 		else:
 			print("--fs, --fset and --age options must be specified")
 			exit(1)
+
+	if args.version == True:
+		print("Version: " + VERSION)
